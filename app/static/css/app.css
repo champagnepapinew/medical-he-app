@@ -1,0 +1,66 @@
+:root{
+  --medical-50:#f2fbff;
+  --medical-100:#dff6ff;
+  --medical-600:#0086d6;
+  --medical-700:#006aa8;
+  --text:#0f172a;
+  --muted:#64748b;
+  --border:#e2e8f0;
+}
+
+.bg-soft{
+  background: #f6f8fb;
+  color: var(--text);
+}
+
+.topbar{
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  backdrop-filter: blur(8px);
+}
+
+.brand-badge{
+  width: 40px;
+  height: 40px;
+  border-radius: 14px;
+  background: var(--medical-100);
+  color: var(--medical-700);
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+}
+
+.nav-item{
+  font-size: 0.95rem;
+  border: 1px solid transparent;
+  transition: all .15s ease;
+}
+
+.nav-inactive{ color: var(--muted); }
+.nav-inactive:hover{
+  background: #f8fafc;
+  color: var(--text);
+}
+
+.nav-active{
+  background: var(--medical-50);
+  color: #0b4a72;
+  border-color: #cfefff;
+}
+
+.btn-medical{
+  background: var(--medical-600);
+  color: white;
+  border: none;
+}
+.btn-medical:hover{
+  background: var(--medical-700);
+  color: white;
+}
+
+.card-soft{
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  box-shadow: 0 1px 0 rgba(15,23,42,.02);
+}

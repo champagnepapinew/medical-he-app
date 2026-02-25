@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block content %}
+
+  <div class="mb-3">
+    <h1 class="h5 fw-semibold mb-1">Pomiary</h1>
+    <div class="text-muted small">Wartości przechowywane jako ciphertext (demo).</div>
+  </div>
+
+  <!-- Formularz w osobnej karcie (nie rozwala układu) -->
+  <div class="card card-soft bg-white p-3 mb-3">
+    <form class="row g-2 align-items-end" method="post" action="/measurements">
+      <div class="col-12 col-md-4">
+        <label class="form-label small text-muted mb-1">Pacjent</label>
+        <select class="form-select form-select-sm" name="patient_id" required>
+          <option value="" selected disabled>Wybierz pacjenta</option>
+          {% for p in patients %}
+            <option value="{{ p.id }}">#{{ p.id }} • {{ p.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-12 col-md-3">
+        <label class="form-label small text-muted mb-1">Typ</label>
+        <select class="form-select form-select-sm" name="kind" required>
+          <option value="glucose">Glukoza</option>
+          <option value="pressure_sys">Ciśnienie (skurczowe)</option>
+          <option value="heart_rate">Tętno</option>
+        </select>
+      </div>
+
+      <div class="col-12 col-md-2">
+        <label class="form-label small text-muted mb-1">Wartość</label>
+        <input class="form-control form-control-sm" type="text" name="value" required placeholder="Wklej ciphertext (base64)">
+      </div>
+
+      <div class="col-12 col-md-2">
+        <label class="form-label small text-muted mb-1">Data</label>
+        <input class="form-control form-control-sm" type="datetime-local" name="taken_at">
+      </div>
+
+      <div class="col-12 col-md-1 d-grid">
+        <button class="btn btn-medical btn-sm" type="submit">Dodaj</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Tabela -->
+  <div class="card card-soft bg-white p-3">
+    <div class="table-responsive">
+      <table class="table align-middle mb-0">
+        <thead>
+          <tr class="text-muted small">
+            <th style="width:90px;">Pacjent</th>
+            <th style="width:180px;">Typ</th>
+            <th>Wartość (ciphertext)</th>
+            <th style="width:220px;">Data</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for m in measurements %}
+            <tr>
+              <td class="text-muted">#{{ m.patient_id }}</td>
+              <td class="fw-semibold">{{ m.kind }}</td>
+              <!-- ciphertext jest długi, więc łamiemy + ograniczamy wysokość -->
+              <td class="text-muted" style="max-width: 520px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                {{ m.value }}
+              </td>
+              <td class="text-muted">{{ m.taken_at.strftime("%Y-%m-%d %H:%M") if m.taken_at else "" }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- opcjonalnie: info -->
+    <div class="text-muted small mt-2">
+      *Ciphertext jest długi — w tabeli pokazujemy skrót (pełna wartość jest w bazie).
+    </div>
+  </div>
+
+{% endblock %}
