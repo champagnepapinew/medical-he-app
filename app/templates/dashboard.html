@@ -19,12 +19,34 @@
     {% endfor %}
   </div>
 
-  <div class="card card-soft p-3 bg-white">
-    <div class="fw-semibold small">Ostatnie zdarzenia</div>
-    <ul class="mt-2 mb-0 text-muted small">
-      {% for e in events %}
-        <li class="mb-1">{{ e }}</li>
-      {% endfor %}
-    </ul>
+  <div class="row g-3">
+    <div class="col-12 col-xl-7">
+      <div class="card card-soft p-3 bg-white h-100">
+        <div class="fw-semibold small">Ostatnie zdarzenia</div>
+        <ul class="mt-2 mb-0 text-muted small">
+          {% for e in events %}
+            <li class="mb-1">{{ e }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+
+    <div class="col-12 col-xl-5">
+      <div class="card card-soft p-3 bg-white h-100">
+        <div class="fw-semibold small mb-2">Szybki start</div>
+        <div class="small text-muted mb-3">
+          Publiczny kontekst:
+          <span class="fw-semibold">{{ "OK" if key_status.public_exists else "BRAK" }}</span>
+          •
+          Klucz prywatny klienta:
+          <span class="fw-semibold">{{ "OK" if key_status.secret_exists else "BRAK" }}</span>
+        </div>
+        <div class="d-flex flex-column gap-2">
+          {% for cmd in quickstart %}
+            <code class="command-pill">{{ cmd }}</code>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
   </div>
 {% endblock %}

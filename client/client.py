@@ -1,14 +1,24 @@
 import base64
 from pathlib import Path
+import sys
+
 import tenseal as ts
 
-KEY_DIR = Path("client_keys")
-KEY_DIR.mkdir(exist_ok=True)
+ROOT_DIR = Path(__file__).resolve().parents[1]
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR))
 
-CTX_PUBLIC = KEY_DIR / "ctx_public.bin"
-CTX_SECRET = KEY_DIR / "ctx_secret.bin"
+from project_paths import (
+    LEGACY_SECRET_CTX_PATH,
+    PUBLIC_CTX_PATH,
+    resolve_secret_context_path,
+    SECRET_CTX_PATH,
+    ensure_key_dirs,
+    using_legacy_secret_path,
+)
 
 def generate_context():
+    ensure_key_dirs()
     ctx = ts.context(
         ts.SCHEME_TYPE.CKKS,
         poly_modulus_degree=8192,
@@ -18,19 +28,40 @@ def generate_context():
     ctx.generate_galois_keys()
     ctx.generate_relin_keys()
 
-    # zapis secret context
-    CTX_SECRET.write_bytes(ctx.serialize(save_secret_key=True))
+    # Secret key stays outside the project directory; the repo only needs the public context.
+    SECRET_CTX_PATH.write_bytes(ctx.serialize(save_secret_key=True))
 
-    # public context (bez secret key)
+    # Public context is shared with the backend for homomorphic evaluation.
     ctx.make_context_public()
-    CTX_PUBLIC.write_bytes(ctx.serialize())
+    PUBLIC_CTX_PATH.write_bytes(ctx.serialize())
 
-    print("OK: wygenerowano klucze i konteksty w folderze client_keys/")
+    print("OK: wygenerowano konteksty HE.")
+    print(f"Public context: {PUBLIC_CTX_PATH}")
+    print(f"Secret context: {SECRET_CTX_PATH}")
+    if LEGACY_SECRET_CTX_PATH.exists():
+        print(
+            "Uwaga: znaleziono stare ctx_secret.bin w katalogu projektu. "
+            "Nowe klucze są zapisywane poza repozytorium."
+        )
 
 def load_secret_context() -> ts.Context:
-    if not CTX_SECRET.exists():
-        raise RuntimeError("Brak ctx_secret.bin. Uruchom: python client.py keygen")
-    return ts.context_from(CTX_SECRET.read_bytes())
+    secret_path = resolve_secret_context_path()
+    if not secret_path.exists():
+        raise RuntimeError(
+            "Brak secret context. Uruchom: python client/client.py keygen"
+        )
+    return ts.context_from(secret_path.read_bytes())
+
+
+def print_status():
+    secret_path = resolve_secret_context_path()
+    print(f"Public context: {PUBLIC_CTX_PATH} [{'OK' if PUBLIC_CTX_PATH.exists() else 'BRAK'}]")
+    print(f"Secret context: {secret_path} [{'OK' if secret_path.exists() else 'BRAK'}]")
+    if using_legacy_secret_path():
+        print(
+            "Uwaga: aplikacja używa starego położenia klucza prywatnego w katalogu projektu. "
+            "Wygeneruj ponownie klucze, aby przenieść sekret poza repozytorium."
+        )
 
 def encrypt(value: float) -> str:
     ctx = load_secret_context()
@@ -57,15 +88,18 @@ if __name__ == "__main__":
 
     if len(sys.argv) < 2:
         print("Użycie:")
-        print("  python client.py keygen")
-        print("  python client.py enc 12.34")
-        print("  python client.py dec <CIPHERTEXT_BASE64>")
+        print("  python client/client.py keygen")
+        print("  python client/client.py status")
+        print("  python client/client.py enc 12.34")
+        print("  python client/client.py dec <CIPHERTEXT_BASE64>")
         raise SystemExit(1)
 
     cmd = sys.argv[1].lower()
 
     if cmd == "keygen":
         generate_context()
+    elif cmd == "status":
+        print_status()
 
     elif cmd == "enc":
         val = float(sys.argv[2])

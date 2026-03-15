@@ -1,0 +1,8 @@
+.DS_Store
+__pycache__/
+*.pyc
+.venv/
+app.db
+benchmark_results.csv
+benchmark_summary.csv
+client_keys/*.bin

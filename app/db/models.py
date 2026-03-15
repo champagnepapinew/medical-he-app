@@ -22,7 +22,7 @@ class Measurement(Base):
     patient_id: Mapped[int] = mapped_column(ForeignKey("patients.id"), index=True)
 
     kind: Mapped[str] = mapped_column(String(50), nullable=False)  # np. "glucose"
-    # na start trzymamy plaintext w bazie jako string; później zamienimy na ciphertext (base64)
+    # Pomiar jest przechowywany jako ciphertext (base64), nie plaintext.
     value: Mapped[str] = mapped_column(Text, nullable=False)
 
     taken_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, index=True)

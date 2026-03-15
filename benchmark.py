@@ -1,16 +1,16 @@
 import time
 import csv
 import random
-from pathlib import Path
 import base64
 
 import tenseal as ts
 from app.he_server import add_ciphertexts
+from project_paths import resolve_secret_context_path
 
-# load secret context once to speed up encrypt/decrypt in benchmark
-SECRET_PATH = Path("client_keys/ctx_secret.bin")
+# Load the same secret context the client uses; fallback supports legacy demos.
+SECRET_PATH = resolve_secret_context_path()
 if not SECRET_PATH.exists():
-    raise RuntimeError("Brak client_keys/ctx_secret.bin — uruchom najpierw keygen")
+    raise RuntimeError("Brak secret context — uruchom najpierw: python client/client.py keygen")
 _SECRET_CTX = ts.context_from(SECRET_PATH.read_bytes())
 
 def encrypt_fast(ctx, value: float) -> str:
@@ -64,23 +64,18 @@ def run_once(n, seed=42):
 def main():
     ns = [10, 100, 500]
     results = []
+    keys = ["n", "t_plain_ms", "t_enc_ms", "t_he_ms", "t_dec_ms", "plain_sum", "dec_sum", "error"]
     for n in ns:
         print(f"Running benchmark n={n}...")
         res = run_once(n, seed=12345)
         results.append(res)
         print(res)
-        # write/appending CSV after each run to avoid data loss on interruption
-        keys = ["n", "t_plain_ms", "t_enc_ms", "t_he_ms", "t_dec_ms", "plain_sum", "dec_sum", "error"]
-        write_header = False
-        try:
-            with open("benchmark_results.csv", "x", newline="", encoding="utf-8") as f:
-                writer = csv.DictWriter(f, fieldnames=keys)
-                writer.writeheader()
-                writer.writerow({k: res.get(k) for k in keys})
-        except FileExistsError:
-            with open("benchmark_results.csv", "a", newline="", encoding="utf-8") as f:
-                writer = csv.DictWriter(f, fieldnames=keys)
-                writer.writerow({k: res.get(k) for k in keys})
+
+    with open("benchmark_results.csv", "w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=keys)
+        writer.writeheader()
+        for res in results:
+            writer.writerow({k: res.get(k) for k in keys})
 
     print("Wyniki zapisane do benchmark_results.csv")
 

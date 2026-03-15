@@ -3,7 +3,32 @@
 
   <div class="mb-3">
     <h1 class="h5 fw-semibold mb-1">Pomiary</h1>
-    <div class="text-muted small">Wartości przechowywane jako ciphertext (demo).</div>
+    <div class="text-muted small">Lekarz wpisuje zwykłą liczbę, a aplikacja szyfruje ją automatycznie przed zapisem.</div>
+  </div>
+
+  {% if error %}
+    <div class="alert alert-danger py-2" role="alert">{{ error }}</div>
+  {% endif %}
+
+  {% if success %}
+    <div class="alert alert-success py-2" role="alert">{{ success }}</div>
+  {% endif %}
+
+  <div class="card card-soft bg-white p-3 mb-3">
+    <div class="fw-semibold mb-2">Przygotowanie demo</div>
+    <div class="small text-muted">
+      Publiczny kontekst:
+      <span class="fw-semibold">{{ "OK" if key_status.public_exists else "BRAK" }}</span>
+      •
+      Klucz prywatny klienta:
+      <span class="fw-semibold">{{ "OK" if key_status.secret_exists else "BRAK" }}</span>
+    </div>
+    <div class="small text-muted mt-2">W trybie demo liczba jest szyfrowana automatycznie po stronie aplikacji.</div>
+    <div class="small text-muted mt-2">Najwygodniejszy start do prezentacji:</div>
+    <div class="d-flex flex-column gap-2 mt-2">
+      <code class="command-pill">python client/client.py keygen</code>
+      <code class="command-pill">python seed_demo.py --reset</code>
+    </div>
   </div>
 
   <!-- Formularz w osobnej karcie (nie rozwala układu) -->
@@ -22,15 +47,15 @@
       <div class="col-12 col-md-3">
         <label class="form-label small text-muted mb-1">Typ</label>
         <select class="form-select form-select-sm" name="kind" required>
-          <option value="glucose">Glukoza</option>
-          <option value="pressure_sys">Ciśnienie (skurczowe)</option>
-          <option value="heart_rate">Tętno</option>
+          {% for kind_value, kind_name in measurement_kinds.items() %}
+            <option value="{{ kind_value }}">{{ kind_name }}</option>
+          {% endfor %}
         </select>
       </div>
 
-      <div class="col-12 col-md-2">
+      <div class="col-12 col-md-3">
         <label class="form-label small text-muted mb-1">Wartość</label>
-        <input class="form-control form-control-sm" type="text" name="value" required placeholder="Wklej ciphertext (base64)">
+        <input class="form-control form-control-sm" type="number" step="0.01" name="value" required placeholder="Np. 98.5">
       </div>
 
       <div class="col-12 col-md-2">
@@ -51,6 +76,7 @@
         <thead>
           <tr class="text-muted small">
             <th style="width:90px;">Pacjent</th>
+            <th style="width:210px;">Pacjent</th>
             <th style="width:180px;">Typ</th>
             <th>Wartość (ciphertext)</th>
             <th style="width:220px;">Data</th>
@@ -60,21 +86,27 @@
           {% for m in measurements %}
             <tr>
               <td class="text-muted">#{{ m.patient_id }}</td>
-              <td class="fw-semibold">{{ m.kind }}</td>
+              <td class="fw-semibold">{{ m.patient.name if m.patient else "Nieznany pacjent" }}</td>
+              <td class="fw-semibold">{{ m.kind|kind_label }}</td>
               <!-- ciphertext jest długi, więc łamiemy + ograniczamy wysokość -->
-              <td class="text-muted" style="max-width: 520px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                {{ m.value }}
+              <td class="text-muted font-monospace" style="max-width: 520px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                {{ m.value|cipher_preview }}
               </td>
               <td class="text-muted">{{ m.taken_at.strftime("%Y-%m-%d %H:%M") if m.taken_at else "" }}</td>
             </tr>
           {% endfor %}
+          {% if not measurements %}
+            <tr>
+              <td colspan="5" class="text-center text-muted py-4">Brak pomiarów. Uruchom `python seed_demo.py --reset`, aby wypełnić bazę przykładowymi danymi.</td>
+            </tr>
+          {% endif %}
         </tbody>
       </table>
     </div>
 
     <!-- opcjonalnie: info -->
     <div class="text-muted small mt-2">
-      *Ciphertext jest długi — w tabeli pokazujemy skrót (pełna wartość jest w bazie).
+      *W bazie nadal przechowujemy ciphertext, ale użytkownik wpisuje zwykłą liczbę. W tabeli pokazujemy skrót zaszyfrowanej wartości.
     </div>
   </div>
 

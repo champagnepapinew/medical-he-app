@@ -5,30 +5,73 @@
     <div class="text-muted small">Serwer liczy na ciphertext i zwraca ciphertext wyniku. Odszyfrowanie wykonuje klient.</div>
   </div>
 
+  {% if error %}
+    <div class="alert alert-danger py-2" role="alert">{{ error }}</div>
+  {% endif %}
+
   <div class="card card-soft bg-white p-3 mb-3">
-    <form class="d-flex flex-wrap gap-2" method="post" action="/he/sum">
-      <select class="form-select form-select-sm" name="patient_id" required style="min-width: 240px;">
-        <option value="" selected disabled>Wybierz pacjenta</option>
-        {% for p in patients %}
-          <option value="{{ p.id }}">#{{ p.id }} • {{ p.name }}</option>
-        {% endfor %}
-      </select>
+    <div class="fw-semibold mb-2">Status kluczy</div>
+    <div class="small text-muted">
+      Publiczny kontekst serwera:
+      <span class="fw-semibold">{{ "OK" if key_status.public_exists else "BRAK" }}</span>
+    </div>
+    <div class="small text-muted">
+      Klucz prywatny klienta:
+      <span class="fw-semibold">{{ "OK" if key_status.secret_exists else "BRAK" }}</span>
+    </div>
+    <div class="small text-muted mt-2">
+      Generowanie kluczy: <code>python client/client.py keygen</code>
+    </div>
+    {% if key_status.legacy_secret %}
+      <div class="alert alert-warning py-2 mt-3 mb-0" role="alert">
+        Wykryto stary klucz prywatny w katalogu projektu. Wygeneruj ponownie klucze, aby przenieść sekret poza repozytorium.
+      </div>
+    {% endif %}
+  </div>
 
-      <select class="form-select form-select-sm" name="kind" required style="min-width: 220px;">
-        <option value="glucose">Glukoza</option>
-        <option value="pressure_sys">Ciśnienie (skurczowe)</option>
-        <option value="heart_rate">Tętno</option>
-      </select>
+  <div class="card card-soft bg-white p-3 mb-3">
+    <div class="d-flex flex-wrap gap-2">
+      <form class="d-flex flex-wrap gap-2" method="post" action="/he/sum">
+        <select class="form-select form-select-sm" name="patient_id" required style="min-width: 240px;">
+          <option value="" selected disabled>Wybierz pacjenta</option>
+          {% for p in patients %}
+            <option value="{{ p.id }}">#{{ p.id }} • {{ p.name }}</option>
+          {% endfor %}
+        </select>
 
-      <button class="btn btn-medical btn-sm" type="submit">Policz sumę (HE)</button>
-    </form>
+        <select class="form-select form-select-sm" name="kind" required style="min-width: 220px;">
+          {% for kind_value, kind_name in measurement_kinds.items() %}
+            <option value="{{ kind_value }}">{{ kind_name }}</option>
+          {% endfor %}
+        </select>
+
+        <button class="btn btn-medical btn-sm" type="submit">Policz sumę (HE)</button>
+      </form>
+
+      <form class="d-flex flex-wrap gap-2" method="post" action="/he/avg">
+        <select class="form-select form-select-sm" name="patient_id" required style="min-width: 240px;">
+          <option value="" selected disabled>Wybierz pacjenta</option>
+          {% for p in patients %}
+            <option value="{{ p.id }}">#{{ p.id }} • {{ p.name }}</option>
+          {% endfor %}
+        </select>
+
+        <select class="form-select form-select-sm" name="kind" required style="min-width: 220px;">
+          {% for kind_value, kind_name in measurement_kinds.items() %}
+            <option value="{{ kind_value }}">{{ kind_name }}</option>
+          {% endfor %}
+        </select>
+
+        <button class="btn btn-outline-secondary btn-sm" type="submit">Policz średnią (HE)</button>
+      </form>
+    </div>
   </div>
 
   {% if result_title %}
     <div class="card card-soft bg-white p-3">
       <div class="fw-semibold">{{ result_title }}</div>
       <div class="text-muted small mt-1">
-        Pacjent #{{ patient_id }}, typ: <span class="fw-semibold">{{ kind }}</span>, liczba pomiarów: {{ count }}
+        Pacjent #{{ patient_id }}, typ: <span class="fw-semibold">{{ kind|kind_label }}</span>, liczba pomiarów: {{ count }}
       </div>
 
       <div class="mt-3">
@@ -37,12 +80,25 @@
         <div class="text-muted small mt-1">Length: {{ result_ct|length }}</div>
       </div>
 
+      {% if result_plain is not none %}
+        <div class="mt-3">
+          <div class="text-muted small mb-1">Wynik demo po odszyfrowaniu lokalnym serwera:</div>
+          <div class="fw-semibold">{{ "%.4f"|format(result_plain) }}</div>
+        </div>
+      {% endif %}
+
       <div class="text-muted small mt-3">
         Odszyfruj lokalnie:
         <div class="mt-1">
           <code>python client/client.py dec "&lt;Wklej_ciphertext&gt;"</code>
         </div>
       </div>
+
+      {% if result_plain is none %}
+        <div class="alert alert-secondary py-2 mt-3 mb-0" role="alert">
+          Wynik liczbowy nie został odszyfrowany na serwerze. To jest poprawne zachowanie dla docelowego modelu klient-serwer.
+        </div>
+      {% endif %}
     </div>
   {% endif %}
 {% endblock %}

@@ -1,8 +1,6 @@
 import base64
-from pathlib import Path
 import tenseal as ts
-
-PUBLIC_CTX_PATH = Path("client_keys/ctx_public.bin")
+from project_paths import PUBLIC_CTX_PATH
 
 _CTX: ts.Context | None = None
 

@@ -5,3 +5,4 @@ python-multipart==0.0.9
 sqlalchemy==2.0.32
 tenseal==0.3.16
 numpy
+httpx>=0.27,<1
