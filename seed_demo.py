@@ -7,7 +7,7 @@ ROOT_DIR = Path(__file__).resolve().parent
 if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
-from app.db.database import SessionLocal
+from app.db.database import Base, SessionLocal, engine
 from app.db.models import Measurement, Patient
 from client.client import encrypt
 
@@ -44,6 +44,7 @@ DEMO_PATIENTS = [
 
 
 def seed_demo(reset: bool) -> None:
+    Base.metadata.create_all(bind=engine)
     db = SessionLocal()
     try:
         if reset:

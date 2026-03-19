@@ -2,14 +2,23 @@
 
 Projekt demonstracyjny do pracy dyplomowej: aplikacja do przetwarzania danych medycznych z wykorzystaniem szyfrowania homomorficznego.
 
-## Zakres projektu
+## Cel projektu
 
-- rejestr pacjentów i pomiarów medycznych,
-- wprowadzanie pomiarów jako zwykłych liczb i automatyczne szyfrowanie przed zapisem,
-- przechowywanie pomiarów w bazie jako ciphertext `base64`,
-- agregacja sumy i średniej na zaszyfrowanych danych,
+Celem projektu jest pokazanie, ze dane medyczne moga byc:
+
+- zapisywane w bazie w postaci ciphertext,
+- agregowane bez odslaniania plaintextu po stronie serwera,
+- przetwarzane w modelu klient-serwer z wykorzystaniem szyfrowania homomorficznego.
+
+## Zakres aplikacji
+
+- rejestr pacjentow,
+- dodawanie pomiarow medycznych,
+- automatyczne szyfrowanie danych liczbowych przed zapisem,
+- przechowywanie wartosci jako ciphertext `base64`,
+- obliczanie sumy i sredniej dla zaszyfrowanych pomiarow,
 - prosty benchmark `plaintext vs HE`,
-- dane demonstracyjne i smoke test aplikacji.
+- dane demonstracyjne i smoke test.
 
 ## Stos technologiczny
 
@@ -20,53 +29,106 @@ Projekt demonstracyjny do pracy dyplomowej: aplikacja do przetwarzania danych me
 - SQLite
 - TenSEAL / CKKS
 
+## Wymagania
+
+- Python 3.11
+- `pip`
+- system zgodny z biblioteka `TenSEAL`
+
+Uwaga: projekt byl weryfikowany na Pythonie `3.11`. Na Pythonie `3.13` zaleznosci nie byly gotowe do uruchomienia.
+
 ## Uruchomienie
 
-1. Aktywuj środowisko:
+### Windows
 
-```bash
-source .venv/bin/activate
+1. Utworz srodowisko:
+
+```powershell
+py -3.11 -m venv .venv
 ```
 
-2. Zainstaluj zależności:
+2. Aktywuj srodowisko:
 
-```bash
+```powershell
+.\.venv\Scripts\Activate.ps1
+```
+
+3. Zainstaluj zaleznosci:
+
+```powershell
 pip install -r requirements.txt
 ```
 
-3. Wygeneruj klucze:
+4. Wygeneruj klucze:
 
-```bash
-python client/client.py keygen
+```powershell
+python client\client.py keygen
 ```
 
-4. Wstaw dane demo:
+5. Wstaw dane demonstracyjne:
 
-```bash
+```powershell
 python seed_demo.py --reset
 ```
 
-5. Opcjonalnie uruchom benchmark:
+6. Opcjonalnie uruchom benchmark:
 
-```bash
+```powershell
 python run_benchmark_reps.py
 ```
 
-6. Start aplikacji:
+7. Uruchom aplikacje:
 
-```bash
+```powershell
 uvicorn app.main:app --reload
 ```
 
 ## Test dymny
 
-```bash
+```powershell
 python smoke_test.py
 ```
 
-## Uwagi do demo
+## Architektura demo a architektura docelowa
 
-- publiczny kontekst HE jest trzymany w `client_keys/ctx_public.bin`,
-- klucz prywatny klienta powinien być trzymany poza repozytorium; aplikacja wspiera też stary układ dla zgodności wstecznej,
-- w obecnym trybie demo wpisana liczba jest szyfrowana automatycznie po stronie aplikacji,
-- odszyfrowanie po stronie serwera jest używane wyłącznie jako pomocniczy tryb demo.
+Projekt prezentuje poprawny przeplyw dla operacji HE, ale aplikacja dziala w trybie demonstracyjnym:
+
+- serwer przechowuje i agreguje ciphertext,
+- publiczny kontekst HE jest udostepniany backendowi,
+- klucz prywatny klienta powinien pozostawac poza repozytorium,
+- w aktualnym demo wpisana liczba jest szyfrowana automatycznie po stronie aplikacji,
+- opcjonalne odszyfrowanie wyniku po stronie serwera sluzy tylko do prezentacji lokalnej.
+
+Docelowy wariant architektury:
+
+- szyfrowanie wejscia powinno byc wykonywane po stronie klienta,
+- serwer powinien operowac wylacznie na ciphertext,
+- odszyfrowanie wyniku powinno odbywac sie po stronie klienta.
+
+## Klucze
+
+- publiczny kontekst HE: `client_keys/ctx_public.bin`
+- prywatny kontekst klienta: `C:\Users\<user>\.medical_he_client\ctx_secret.bin`
+
+Aplikacja zachowuje zgodnosc wsteczna ze starszym ukladem, ale preferowany jest zapis klucza prywatnego poza repozytorium.
+
+## Szybki scenariusz do prezentacji
+
+1. `py -3.11 -m venv .venv`
+2. `.\.venv\Scripts\Activate.ps1`
+3. `pip install -r requirements.txt`
+4. `python client\client.py keygen`
+5. `python seed_demo.py --reset`
+6. `python run_benchmark_reps.py`
+7. `uvicorn app.main:app --reload`
+
+## Wynik weryfikacji
+
+Podczas lokalnej weryfikacji przechodzily:
+
+- generowanie kluczy,
+- seed danych demo,
+- smoke test,
+- benchmark,
+- szyfrowanie i odszyfrowanie pojedynczej wartosci,
+- suma HE dla wielu ciphertextow.

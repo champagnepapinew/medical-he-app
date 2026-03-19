@@ -34,6 +34,9 @@
     <div class="col-12 col-xl-5">
       <div class="card card-soft p-3 bg-white h-100">
         <div class="fw-semibold small mb-2">Szybki start</div>
+        <div class="alert alert-warning py-2 small" role="alert">
+          Aplikacja pracuje w trybie demo. Serwer liczy na ciphertext, ale szyfrowanie danych wejsciowych w tym pokazie odbywa sie lokalnie w aplikacji.
+        </div>
         <div class="small text-muted mb-3">
           Publiczny kontekst:
           <span class="fw-semibold">{{ "OK" if key_status.public_exists else "BRAK" }}</span>

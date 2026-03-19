@@ -1,5 +1,7 @@
 from fastapi.testclient import TestClient
 
+from app.db.database import SessionLocal
+from app.db.models import Patient
 from app.main import app
 
 
@@ -14,15 +16,28 @@ def main() -> None:
     for path in ["/", "/patients", "/measurements", "/he", "/benchmark"]:
         assert_ok(client, path)
 
+    patient_response = client.post(
+        "/patients",
+        data={"name": "Test Pacjent", "note": "Smoke test"},
+        follow_redirects=False,
+    )
+    assert patient_response.status_code == 303
+
+    db = SessionLocal()
+    try:
+        patient_id = db.query(Patient).order_by(Patient.id.desc()).first().id
+    finally:
+        db.close()
+
     bad_measurement = client.post(
         "/measurements",
-        data={"patient_id": 1, "kind": "glucose", "value": "bledna-liczba", "taken_at": ""},
+        data={"patient_id": patient_id, "kind": "glucose", "value": "bledna-liczba", "taken_at": ""},
     )
     assert bad_measurement.status_code == 400
 
     good_measurement = client.post(
         "/measurements",
-        data={"patient_id": 1, "kind": "glucose", "value": "98.5", "taken_at": ""},
+        data={"patient_id": patient_id, "kind": "glucose", "value": "98.5", "taken_at": ""},
         follow_redirects=False,
     )
     assert good_measurement.status_code == 303

@@ -11,6 +11,9 @@
 
   <div class="card card-soft bg-white p-3 mb-3">
     <div class="fw-semibold mb-2">Status kluczy</div>
+    <div class="alert alert-warning py-2 small" role="alert">
+      Tryb demonstracyjny: serwer zwraca ciphertext wyniku. Widok moze pokazac wynik liczbowy tylko jako lokalna pomoc do prezentacji, nie jako docelowy model produkcyjny.
+    </div>
     <div class="small text-muted">
       Publiczny kontekst serwera:
       <span class="fw-semibold">{{ "OK" if key_status.public_exists else "BRAK" }}</span>

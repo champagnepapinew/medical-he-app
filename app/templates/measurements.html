@@ -16,6 +16,9 @@
 
   <div class="card card-soft bg-white p-3 mb-3">
     <div class="fw-semibold mb-2">Przygotowanie demo</div>
+    <div class="alert alert-warning py-2 small" role="alert">
+      Tryb demonstracyjny: formularz przyjmuje liczbe jawna, a aplikacja szyfruje ja przed zapisem. W wariancie docelowym szyfrowanie powinno byc wykonane po stronie klienta.
+    </div>
     <div class="small text-muted">
       Publiczny kontekst:
       <span class="fw-semibold">{{ "OK" if key_status.public_exists else "BRAK" }}</span>
